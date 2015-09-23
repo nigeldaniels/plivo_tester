@@ -1,0 +1,74 @@
+#!/usr/bin/python2 
+from BaseHTTPServer import HTTPServer
+from BaseHTTPServer import BaseHTTPRequestHandler
+import urlparse
+import requests
+import os 
+import uuid 
+
+def get_auth():
+    auth_data=[]
+    authfile = open('auth','r')
+    auth_data.append(authfile.readline())
+    auth_data.append(authfile.readline())
+    return auth_data
+
+
+def make_call(conf_id):
+    payload = {'From':from_phone,
+               'To':to_phone,
+               'AnswerUrl':answer_url+'/'+conf_id,
+               'Gateways':gateway
+    }
+
+    request = requests.post(plivo_base_url,payload)
+
+class PostHandler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        num_calls =  0 
+        conf_number = 0
+
+        url_used = urlparse.urlparse(self.path)
+        print url_used
+        if url_used.path == '/answer/':
+            answer(self)
+        if url_used.path.split('/')[1] == 'conf':
+            conference(self,url_used.path.split('/')[2])
+
+
+def answer(request):
+    print "somthing happend in the conferance"
+    request.send_response(200)
+    request.end_headers()
+    conf_id = str(uuid.uuid4())
+    conftext = """<?xml version="1.0" encoding="UTF-8" ?><Response><Conference callbackUrl = "http://10.100.20.41/conf/"""+conf_id+"\">"""+conf_id+"""</Conference></Response>"""
+    print conftext
+    request.wfile.write(conftext)
+    make_call(conf_id)
+
+def conference(request,conf_id):
+    conftext = """<?xml version="1.0" encoding="UTF-8" ?><Response><Conference>"""+conf_id+"""</Conference></Response>"""
+    request.send_response(200)
+    request.end_headers()
+    request.wfile.write(conftext)
+
+def main():
+
+    auth =   get_auth()
+    print auth
+    auth_id = auth[0]
+    auth_token = auth[1]
+
+    to_phone = ''
+    answer_url =  'http://10.100.20.41/conf'
+    from_phone = '1111111111'
+    gateway = 'sofia/gateway/flowroute/'
+    plivo_base_url = 'http://'+auth_id+':'+auth_token+'@10.0.255.9:8088/v0.1/Call/'
+
+
+
+    server = HTTPServer(('10.100.20.41', 80), PostHandler)
+    server.serve_forever()
+
+if __name__ == '__main__':
+    main()
