@@ -14,7 +14,18 @@ def get_auth():
     return auth_data
 
 
-def make_call(conf_id):
+def make_call(auth,conf_id):
+    print "making the second call"
+    auth_id = auth[0].rstrip()
+    auth_token = auth[1].rstrip()
+
+    to_phone = '+18184566114'
+    answer_url =  'http://10.100.20.178/conf'
+    from_phone = '1111111111'
+    gateway = 'sofia/gateway/load-test/'
+    plivo_base_url = 'http://'+auth_id+':'+auth_token+'@10.0.255.10:8088/v0.1/Call/'
+
+
     payload = {'From':from_phone,
                'To':to_phone,
                'AnswerUrl':answer_url+'/'+conf_id,
@@ -23,11 +34,9 @@ def make_call(conf_id):
 
     request = requests.post(plivo_base_url,payload)
 
+
 class PostHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-        num_calls =  0 
-        conf_number = 0
-
         url_used = urlparse.urlparse(self.path)
         print url_used
         if url_used.path == '/answer/':
@@ -44,30 +53,21 @@ def answer(request):
     conftext = """<?xml version="1.0" encoding="UTF-8" ?><Response><Conference callbackUrl = "http://10.100.20.41/conf/"""+conf_id+"\">"""+conf_id+"""</Conference></Response>"""
     print conftext
     request.wfile.write(conftext)
-    make_call(conf_id)
+    auth = get_auth() 
+    make_call(auth,conf_id)
+
 
 def conference(request,conf_id):
     conftext = """<?xml version="1.0" encoding="UTF-8" ?><Response><Conference>"""+conf_id+"""</Conference></Response>"""
     request.send_response(200)
     request.end_headers()
     request.wfile.write(conftext)
+ 
 
 def main():
 
-    auth =   get_auth()
-    print auth
-    auth_id = auth[0]
-    auth_token = auth[1]
 
-    to_phone = ''
-    answer_url =  'http://10.100.20.41/conf'
-    from_phone = '1111111111'
-    gateway = 'sofia/gateway/flowroute/'
-    plivo_base_url = 'http://'+auth_id+':'+auth_token+'@10.0.255.9:8088/v0.1/Call/'
-
-
-
-    server = HTTPServer(('10.100.20.41', 80), PostHandler)
+    server = HTTPServer(('10.100.20.178', 80), PostHandler)
     server.serve_forever()
 
 if __name__ == '__main__':
