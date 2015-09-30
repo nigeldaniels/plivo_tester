@@ -6,10 +6,10 @@ def make_call(auth):
     auth_id = auth[0].rstrip()
     auth_token = auth[1].rstrip()
     to_phone = '5551212'
-    answer_url =  'http://10.100.20.41/answer/'
+    answer_url =  'http://127.0.0.1/answer/'
     from_phone = '1111111111'
     gateway = 'sofia/gateway/load-test/'
-    plivo_base_url = 'http://'+auth_id+':'+auth_token+'@54.153.78.160:8088/v0.1/Call/'
+    plivo_base_url = 'http://'+auth_id+':'+auth_token+'@127.0.0.1:8088/v0.1/Call/'
 
     payload = {'From':from_phone,
                'To':to_phone,
