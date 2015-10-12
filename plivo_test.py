@@ -2,7 +2,7 @@
 import requests
 import psycopg2
 
-phone_data = {'from_phone': 5555551212,
+phone_data = {'from_phone':'1111111111',
              'phone_to':55551212,
              'plivo_request_uuid':'1111111111',
              'sf_task_id':'1111111111',
@@ -16,12 +16,13 @@ def make_call(auth,dial_id):
     auth_token = auth[1].rstrip()
     answer_url =  'http://127.0.0.1/answer/'
     gateway = 'sofia/gateway/load-test/'
-    plivo_base_url = 'http://'+auth_id+':'+auth_token+'@127.0.0.1:8088/v0.1/Call?ExtraDialString='+dial_id
+    plivo_base_url = 'http://'+auth_id+':'+auth_token+'@127.0.0.1:8088/v0.1/Call/'
 
     payload = {'From':phone_data['from_data'],
                'To':phone_data['phone_to'],
                'AnswerUrl':answer_url,
-               'Gateways':gateway, 
+               'Gateways':gateway,
+               'ExtraDialString':'sip_h_Accuvit-Dial-ID='+dial_id[0][0]+',sip_h_Accuvit-Dial-Side=0'
     }
     request = requests.post(plivo_base_url,payload)
 
@@ -56,7 +57,5 @@ def main():
     dial_id  = get_dial_id(db_cursor,phone_data)
     make_call(get_auth(),dial_id[0][0])
 
-
 if __name__== '__main__':
     main()
-
