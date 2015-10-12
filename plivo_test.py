@@ -3,11 +3,11 @@ import requests
 import psycopg2
 
 phone_data = {'from_phone':'1111111111',
-             'phone_to':55551212,
+             'phone_to':5551212,
              'plivo_request_uuid':'1111111111',
              'sf_task_id':'1111111111',
-             'user_id':'111111',
-             'org-id':'load-test'
+             'user_id':'1122111',
+             'org-id':'load-test2'
              }
 
 def make_call(auth,dial_id):
@@ -18,14 +18,14 @@ def make_call(auth,dial_id):
     gateway = 'sofia/gateway/load-test/'
     plivo_base_url = 'http://'+auth_id+':'+auth_token+'@127.0.0.1:8088/v0.1/Call/'
 
-    payload = {'From':phone_data['from_data'],
+    payload = {'From':phone_data['from_phone'],
                'To':phone_data['phone_to'],
                'AnswerUrl':answer_url,
                'Gateways':gateway,
-               'ExtraDialString':'sip_h_Accuvit-Dial-ID='+dial_id[0][0]+',sip_h_Accuvit-Dial-Side=0'
+               'ExtraDialString':'sip_h_Accuvit-Dial-ID='+str(dial_id)+',sip_h_Accuvit-Dial-Side=0'
     }
     request = requests.post(plivo_base_url,payload)
-
+    print dial_id
 def get_auth():
     auth_data=[]
     authfile = open('auth','r')
@@ -41,15 +41,18 @@ def database_auth():
     return database_params
 
 def database_setup(database_params):
-    conn_string = " host="+database_params[0] + " dbname="+database_params[1] + " user="+database_params[2] + " password="+ database_params[3] + " port=5802"
+    conn_string = " host="+database_params[0] + " dbname="+database_params[1] + " user="+database_params[2] + " password="+ database_params[3] + " port=6252"
     conn = psycopg2.connect(conn_string)
     cur = conn.cursor()
-    return cur
+    return conn
 
-def get_dial_id(db_cursor,phone_data):
+def get_dial_id(conn,phone_data):
+    cur = conn.cursor()
     I_query = """INSERT INTO dials (phone_from, phone_to, plivo_request_uuid, sf_task_id, user_id, org_id) VALUES (%s, %s, %s, %s, %s, %s) RETURNING dial_id;"""
-    db_cursor.execute(I_query,(phone_data['from_phone'],phone_data['phone_to'],phone_data['plivo_request_uuid'],phone_data['sf_task_id'],phone_data['user_id'],phone_data['org-id']))
-    return db_cursor.fetchall()
+    cur.execute(I_query,(phone_data['from_phone'],phone_data['phone_to'],phone_data['plivo_request_uuid'],phone_data['sf_task_id'],phone_data['user_id'],phone_data['org-id']))
+    myshit = cur.fetchall() 	
+    conn.commit()
+    return myshit
 
 def main():
     test = database_auth()
